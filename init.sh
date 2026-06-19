@@ -28,17 +28,11 @@ DATA_DIR=${DATA_DIR:-$(pwd)/data}
 echo -e "数据目录: ${DATA_DIR}"
 
 echo -e "${YELLOW}创建数据目录...${NC}"
-mkdir -p "${DATA_DIR}/pgsql/data" "${DATA_DIR}/redis/data" "${DATA_DIR}/nats/data" "${DATA_DIR}/consul/data" "${DATA_DIR}/nginx/conf.d"
+mkdir -p "${DATA_DIR}/pgsql/data" "${DATA_DIR}/redis/data" "${DATA_DIR}/nats/data" "${DATA_DIR}/minio/data" "${DATA_DIR}/nginx/conf.d"
 cp ./nginx/conf.d/*.conf "${DATA_DIR}/nginx/conf.d/"
-for conf in "${DATA_DIR}/nginx/conf.d/"*.conf; do
-    if grep -q "proxy_pass http://nacos:8848;" "$conf"; then
-        sed -i.bak 's|proxy_pass http://nacos:8848;|proxy_pass http://consul:8500;|g' "$conf"
-        rm -f "${conf}.bak"
-    fi
-done
 
 echo -e "${YELLOW}检查冲突容器...${NC}"
-CONTAINER_NAMES=("pgsql-pgvector" "redis" "opsdock-nats" "consul" "nginx")
+CONTAINER_NAMES=("pgsql-pgvector" "redis" "opsdock-nats" "minio" "nginx")
 for name in "${CONTAINER_NAMES[@]}"; do
     if docker ps -a --format '{{.Names}}' | grep -q "^${name}$"; then
         echo -e "${YELLOW}停止并删除容器: $name${NC}"
@@ -58,9 +52,9 @@ echo -e "${GREEN}=== 初始化完成 ===${NC}"
 echo -e "访问地址:"
 echo -e "  NATS:       nats://localhost:${NATS_CLIENT_PORT:-4222}"
 echo -e "  NATS 监控:  http://localhost:${NATS_MONITOR_PORT:-8222}"
-echo -e "  Consul:     http://localhost:${CONSUL_HTTP_PORT:-8500}/ui/"
+echo -e "  MinIO 控制台: http://localhost:${MINIO_CONSOLE_PORT:-9001}"
 echo ""
 echo -e "管理命令:"
-echo -e "  make up     - 启动所有服务"
-echo -e "  make down   - 停止所有服务"
-echo -e "  make logs   - 查看日志"
+echo -e "  docker compose up -d    - 启动所有服务"
+echo -e "  docker compose down     - 停止所有服务"
+echo -e "  docker compose logs -f  - 查看日志"

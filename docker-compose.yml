@@ -11,9 +11,9 @@ services:
     cpus: 0.50
     mem_limit: 256m
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: zephyr_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
       TZ: Asia/Shanghai
     ports:
       - "127.0.0.1:5432:5432"
@@ -37,7 +37,7 @@ services:
       - -c
       - max_wal_size=256MB
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-zephyr} -d ${POSTGRES_DB:-zephyrdb}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -92,34 +92,31 @@ services:
       timeout: 3s
       retries: 20
 
+
   # ------------------------------
-  # Consul
+  # MinIO
   # ------------------------------
-  consul:
-    image: hashicorp/consul:1.18
-    container_name: consul
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: minio
     restart: always
     mem_limit: 256m
     environment:
-      CONSUL_BIND_INTERFACE: eth0
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-password}
+      TZ: Asia/Shanghai
     ports:
-      - "127.0.0.1:${CONSUL_HTTP_PORT:-8500}:8500"
-      - "127.0.0.1:${CONSUL_DNS_PORT:-8600}:8600/udp"
-      - "127.0.0.1:${CONSUL_DNS_PORT:-8600}:8600/tcp"
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - ${DATA_DIR}/consul/data:/consul/data
-    command:
-      - agent
-      - -server
-      - -bootstrap-expect=1
-      - -ui
-      - -client=0.0.0.0
-      - -data-dir=/consul/data
+      - ${DATA_DIR}/minio/data:/data
+    command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "consul", "info"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
   # ------------------------------
   # Nginx
@@ -129,8 +126,6 @@ services:
     container_name: nginx
     restart: always
     mem_limit: 64m
-    depends_on:
-      - consul
     ports:
       - "${NGINX_HTTP_PORT:-80}:80"
     volumes:
@@ -139,5 +134,5 @@ services:
 
 networks:
   default:
-    name: opsdock_default
+    name: infra_default
     driver: bridge

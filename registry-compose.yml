@@ -1,0 +1,9 @@
+services:
+  registry:
+    image: registry:2
+    container_name: zephyr-registry
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - ${DATA_DIR}/registry:/var/lib/registry

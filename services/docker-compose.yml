@@ -1,0 +1,37 @@
+services:
+  identity:
+    image: ${REGISTRY}/zephyr-identity:${IMAGE_TAG}
+    container_name: zephyr-identity
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8081:8081"
+
+  auth:
+    image: ${REGISTRY}/zephyr-auth:${IMAGE_TAG}
+    container_name: zephyr-auth
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8080:8080"
+    depends_on:
+      - identity
+
+  gateway:
+    image: ${REGISTRY}/zephyr-gateway:${IMAGE_TAG}
+    container_name: zephyr-gateway
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+    ports:
+      - "8888:8888"
+    depends_on:
+      - auth
+      - identity
+
+networks:
+  default:
+    name: infra_default
+    external: true
