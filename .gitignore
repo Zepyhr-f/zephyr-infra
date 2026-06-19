@@ -1,8 +1,20 @@
 # Git ignore
-.env
-*.log
 .DS_Store
-.vscode
-data/
+.vscode/
+*.log
 
-.env.remote
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Local Docker Compose overrides for server-specific images, ports and mounts
+docker-compose.override.yml
+docker-compose.local.yml
+*-compose.override.yml
+*-compose.local.yml
+
+# Runtime data generated on deployment hosts
+data/
+logs/
+backup/
