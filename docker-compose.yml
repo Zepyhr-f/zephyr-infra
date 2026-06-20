@@ -64,6 +64,11 @@ services:
       - "127.0.0.1:6379:6379"
     volumes:
       - ${DATA_DIR}/redis/data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ------------------------------
   # NATS
@@ -131,6 +136,12 @@ services:
     volumes:
       - ${DATA_DIR}/nginx/conf.d:/etc/nginx/conf.d:ro
       - ${DATA_DIR}/nginx/www:/usr/share/nginx/www:ro
+      - /app/logs/nginx:/var/log/nginx
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 networks:
   default:
