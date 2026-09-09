@@ -1,9 +1,0 @@
-.env
-.git
-.gitignore
-README.md
-Makefile
-*.md
-*.log
-.DS_Store
-.vscode
